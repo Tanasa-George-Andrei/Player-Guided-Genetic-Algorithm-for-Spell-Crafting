@@ -127,26 +127,30 @@ public class GeneticAlgObjectPool<T> where T : new()
 
     public T GetObject()
     {
-
-        T temp;
-        if (availableObjects.Count != 0)
+        lock (availableObjects)
         {
-            temp = availableObjects[0];
-            inUseObjects.Add(temp);
-            availableObjects.RemoveAt(0);
+            T temp;
+            if (availableObjects.Count != 0)
+            {
+                temp = availableObjects[0];
+                inUseObjects.Add(temp);
+                availableObjects.RemoveAt(0);
+            }
+            else
+            {
+                temp = new T();
+                inUseObjects.Add(temp);
+            }
+            return temp;
         }
-        else
-        {
-            temp = new T();
-            inUseObjects.Add(temp);
-        }
-
-        return temp;
     }
     public virtual void ReleaseObject(T _active)
     {
-        availableObjects.Add(_active);
-        inUseObjects.Remove(_active);
+        lock (availableObjects)
+        {
+            availableObjects.Add(_active);
+            inUseObjects.Remove(_active);
+        }
     }
 
 }
@@ -192,3 +196,9 @@ public abstract class GeneticSpellComponent
     public abstract GeneticSpellComponent Clone();
 }
 
+public abstract class GenericGeneticSpellComponent<T> : GeneticSpellComponent where T : new()
+{
+
+    protected static GeneticAlgObjectPool<T> geneticAlgObjectPool = new GeneticAlgObjectPool<T>();
+
+}
