@@ -38,7 +38,7 @@ public class PlayerAction : MonoBehaviour
         }
         else if (finishedStep) 
         {
-            //PlayerUIManager.Instance.ChangeToCandidateSelect();
+            PlayerUIManager.Instance.ChangeToCandidateSelect();
             isUIOpen = true;
         }
     }
@@ -54,8 +54,8 @@ public class PlayerAction : MonoBehaviour
         //componentBag.Add(new GPierce());
         //componentBag.Add(new GFork());
         //componentBag.Add(new GSticky());
-        alg = new GeneticAlgorithm(componentBag, 10000, 200, 12, 0.3f, 0.1f, 0.2f, 0.1f, 1.4f);
-        PlayerUIManager.Instance.SetSpellCandidates(alg.GetDisplayCandiadates(), alg.ID);
+        alg = new GeneticAlgorithm(componentBag, 100, 200, 12, 0.3f, 0.1f, 0.2f, 0.3f, 1.4f);
+        PlayerUIManager.Instance.SetSpellCandidates(alg.GetFirstRoundOfCandidates(), alg.ID);
         PlayerUIManager.Instance.SetSMInteractNotification(true);
         finishedStep = true;
     }

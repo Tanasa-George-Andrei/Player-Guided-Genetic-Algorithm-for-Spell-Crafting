@@ -48,7 +48,9 @@ public class PlayerUIManager : MonoBehaviour
     //[SerializeField]
     //private GameObject SMStart;
     //[SerializeField]
-    //private GameObject SMStep;
+    //private GameObject SMStart;
+    [SerializeField]
+    private GameObject SMCandidateSelect;
     //[SerializeField]
     //private GameObject SMFinish;
 
@@ -67,7 +69,7 @@ public class PlayerUIManager : MonoBehaviour
     [SerializeField]
     private GameObject candidateCardPrefab;
     [SerializeField]
-    private GameObject SMStepContent;
+    private GameObject SMCandidateSelectContent;
 
     private List<CandidateUI> candidateUIData = new List<CandidateUI>();
     private List<SpellCandidate> candidateData;
@@ -81,7 +83,7 @@ public class PlayerUIManager : MonoBehaviour
         pauseMenu.SetActive(false);
         gameOverScreen.SetActive(false);
         //SMStart.SetActive(false);
-        //SMStep.SetActive(false);
+        SMCandidateSelect.SetActive(false);
         //SMFinish.SetActive(false);
     }
 
@@ -120,7 +122,7 @@ public class PlayerUIManager : MonoBehaviour
         GameObject temp;
         for (int i = 0; i < count; i++)
         {
-            temp = Instantiate(candidateCardPrefab, SMStepContent.transform);
+            temp = Instantiate(candidateCardPrefab, SMCandidateSelectContent.transform);
             candidateUIData.Add(new CandidateUI(false, temp, temp.GetComponent<Button>(), temp.transform.GetChild(0).gameObject, temp.GetComponentInChildren<Outline>(), temp.GetComponentInChildren<TMP_Text>()));
         }
         spellAlgID = _ID;
@@ -144,13 +146,13 @@ public class PlayerUIManager : MonoBehaviour
         }
     }
 
-    //public void ChangeToCandidateSelect()
-    //{
-    //    ChangeToInterface(SMStep);
-    //    Time.timeScale = 0f;
-    //    Cursor.lockState = CursorLockMode.None;
-    //    Cursor.visible = true;
-    //}
+    public void ChangeToCandidateSelect()
+    {
+        ChangeToInterface(SMCandidateSelect);
+        Time.timeScale = 0f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
 
     public void ExitCandidateSelect()
     {
@@ -159,6 +161,7 @@ public class PlayerUIManager : MonoBehaviour
 
     public void ForwardCandidates()
     {
+        pauseWaitCoroutine = StartCoroutine(WaitForPause());
         int count = candidateData.Count;
         int selectCount = 0;
         for (int i = 0; i < count; i++)

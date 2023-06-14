@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Unity.VisualScripting;
 
 public class GTeleport : GeneticSpellComponent
 {
@@ -57,11 +58,10 @@ public class GTeleport : GeneticSpellComponent
         return "Teleport for" + distance;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = (upper - lower) * 0.5f * (float)DropoffFunc(genCMFraction);
-        distance = Helpers.Range(MathF.Max(lower, distance - range/2), MathF.Min(upper, distance + range / 2));
-        return true;
+        distance = Helpers.Range(MathF.Max(lower, distance - range / 2), MathF.Min(upper, distance + range / 2));
     }
 
     public override GeneticSpellComponent Clone()
@@ -128,11 +128,10 @@ public class GDash : GeneticSpellComponent
         return "Dash for" + distance;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = (upper - lower) * 0.5f * (float)DropoffFunc(genCMFraction);
         distance = Helpers.Range(MathF.Max(lower, distance - range / 2), MathF.Min(upper, distance + range / 2));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -201,11 +200,10 @@ public class GPropel : GeneticSpellComponent
         return "Propel with speed: " + speed + "m/s";
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = (upper - lower) * 0.5f * (float)DropoffFunc(genCMFraction);
         speed = Helpers.Range(MathF.Max(lower / time, speed / time - range / 2), MathF.Min(upper / time, speed / time + range / 2));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -260,11 +258,10 @@ public class GCreateMProjectile : GeneticSpellComponent
         return "Create Magic Projectile " + noProjectiles;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = MathF.Ceiling((upper - lower) * 0.5f * (1 - genCMFraction));
         noProjectiles = (int)MathF.Ceiling(Helpers.Range(MathF.Max(lower, noProjectiles - range / 2), MathF.Min(upper, noProjectiles + range / 2)));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -318,11 +315,10 @@ public class GExplode : GeneticSpellComponent
         return "Explode " + radius;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = (upper - lower) * 0.5f * (float)DropoffFunc(genCMFraction);
         radius = Helpers.Range(MathF.Max(lower, radius - range / 2), MathF.Min(upper, radius + range / 2));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -376,11 +372,10 @@ public class GBounces : GeneticSpellComponent
         return "Bounces for " + noBounces;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = MathF.Ceiling((upper - lower) * 0.5f * (1 - genCMFraction));
         noBounces = (int)MathF.Ceiling(Helpers.Range(MathF.Max(lower, noBounces - range / 2), MathF.Min(upper, noBounces + range / 2)));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -434,11 +429,10 @@ public class GFork : GeneticSpellComponent
         return "Fork " + noForks;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = MathF.Ceiling((upper - lower) * 0.5f * (1 - genCMFraction));
         noForks = (int)MathF.Ceiling(Helpers.Range(MathF.Max(lower, noForks - range / 2), MathF.Min(upper, noForks + range / 2)));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -492,11 +486,10 @@ public class GPierce : GeneticSpellComponent
         return "Pierce " + noPierce;
     }
 
-    public override bool Mutation(in float genCMFraction)
+    public override void Mutation(in float genCMFraction)
     {
         float range = MathF.Ceiling((upper - lower) * 0.5f * (1 - genCMFraction));
         noPierce = (int)MathF.Ceiling(Helpers.Range(MathF.Max(lower, noPierce - range / 2), MathF.Min(upper, noPierce + range / 2)));
-        return true;
     }
 
     public override GeneticSpellComponent Clone()
@@ -613,7 +606,7 @@ public class GenPop
         rank = 0;
         components = new List<GeneticSpellComponent>();
         int compCount = _components.Count;
-        for (int i = 0; i < compCount; i++) 
+        for (int i = 0; i < compCount; i++)
         {
             components.Add(_components[i].Clone());
         }
@@ -623,19 +616,31 @@ public class GenPop
     //Change the permutation so with works with perserving structure
     public void Mutate(in int _popLen, in float genCMFraction)
     {
-        int c1 = Helpers.Range(0, _popLen);
         int p = Helpers.Range(0, 100);
-        //Note the whole structure of the genetic algorithm is for fixed
-        //lenght and with not component changin into another so the mutation
-        //function is a bool and it will happen if the first condition is false
-        if(p < 50 || !components[c1].Mutation(genCMFraction))
+        if(p < 30)
         {
-            int c2 = Helpers.Range(0, _popLen);
-            while(c1 == c2)
+            foreach (GeneticSpellComponent comp in components)
             {
-                c2 = Helpers.Range(0, _popLen);
+                comp.Mutation(genCMFraction);
             }
-            (components[c1], components[c2]) = (components[c2], components[c1]);
+        }
+        else
+        {
+            int halfCompSize = components.Count / 2;
+            int noPermutations = Helpers.Range(0, halfCompSize + 1);
+            int interlaceModifier;
+            int c1,c2;
+            for (int i = 0; i < noPermutations; i++)
+            {
+                c1 = Helpers.Range(0, halfCompSize);
+                c2 = Helpers.Range(0, halfCompSize);
+                for (int j = 0;c1 == c2 && j < 10; j++)
+                {
+                    c2 = Helpers.Range(0, halfCompSize);
+                }
+                interlaceModifier = Helpers.Range(0, 2);
+                (components[c1 * 2 + interlaceModifier], components[c2 * 2 + interlaceModifier]) = (components[c2 * 2 + interlaceModifier], components[c1 * 2 + interlaceModifier]);
+            }
         }
     }
 
@@ -648,7 +653,7 @@ public class GenPop
             {
                 if (i == 0 || j == 0)
                     _lcs[i, j] = 0;
-                else if (_reference.components[i - 1].CompareComponent(components[j - 1], _genCMFraction,out similarity))
+                else if (_reference.components[i - 1].CompareComponent(components[j - 1], _genCMFraction, out similarity))
                     _lcs[i, j] = _lcs[i - 1, j - 1] + similarity;
                 else
                     _lcs[i, j] = Math.Max(_lcs[i - 1, j], _lcs[i, j - 1]);
@@ -690,6 +695,104 @@ public class SpellCandidate
     }
 }
 
+public class GNoTrigger : GeneticSpellComponent
+{
+    public GNoTrigger()
+    {
+    }
+
+    public GNoTrigger(byte _id) : base(_id)
+    {
+    }
+
+    public override GeneticSpellComponent Clone()
+    {
+        return new GRightClickTrigger(id);
+    }
+
+    public override bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity)
+    {
+        if (_other.GetType() == typeof(GNoTrigger))
+        {
+            similarity = 1;
+            return true;
+        }
+        similarity = 0;
+        return false;
+    }
+
+    public override GeneticSpellComponent Generate()
+    {
+        return new GNoTrigger(id);
+    }
+
+    public override OriginSpellComponent GenerateOrigin(ElementData _element)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override string GetDisplayString()
+    {
+        return "No Trigger";
+    }
+}
+
+public class GeneticComponentBag
+{
+
+    private readonly GeneticSpellComponent[] triggerList = new GeneticSpellComponent[] { new GRightClickTrigger(), new GNoTrigger() };
+    private readonly int triggerLen;
+    private List<GeneticSpellComponent> componentList;
+    private int compEndIndex;
+    private int genCompLen;
+
+    public GeneticComponentBag(List<GeneticSpellComponent> comps)
+    {
+        triggerLen = triggerList.Length;
+
+        compEndIndex = comps.Count;
+        genCompLen = compEndIndex * 2;
+        componentList = new List<GeneticSpellComponent>();
+        for (int i = 0; i < compEndIndex; i++)
+        {
+            componentList.Add(comps[i].Clone());
+            componentList[i].id = (byte)i;
+        }
+    }
+
+    public GenPop GenerateGenPop()
+    {
+        GenPop temp = new GenPop();
+        for (int i = 0; i < genCompLen; i++)
+        {
+            temp.components.Add(null);
+        }
+        for (int i = 0; i < compEndIndex; i++)
+        {
+            temp.components[i * 2] = componentList[i].Generate();
+        }
+        for (int k = 0; k < compEndIndex; k++)
+        {
+            int j = Helpers.Range(k, compEndIndex);
+            (temp.components[j * 2], temp.components[k * 2]) = (temp.components[k * 2], temp.components[j * 2]);
+        }
+        for (int i = 0; i < compEndIndex; i++)
+        {
+            temp.components[i * 2 + 1] = triggerList[Helpers.Range(0, triggerLen)].Generate();
+            temp.components[i * 2 + 1].id = (byte)(compEndIndex + i);
+        }
+
+        return temp;
+
+    }
+
+    public int GetSizeOfBag()
+    {
+        return genCompLen;
+    }
+
+}
+
 public class GeneticAlgorithm
 {
     private int id;
@@ -716,11 +819,11 @@ public class GeneticAlgorithm
     private bool isDone;
 
     public bool IsDone { get => isDone; set => isDone = value; }
-    public int ID {get => id; private set => id = value; }
+    public int ID { get => id; private set => id = value; }
 
     public GeneticAlgorithm(in List<GeneticSpellComponent> _components, int _maxPopSize, int _maxGenIndex, int _candidateNumber, float _mutationPercentage, float _popCutoffPercentage, float _nextGenParentPercentage, float _displayGenPercentage, double _survivalPressure)
     {
-        id = Helpers.Range(1,int.MaxValue);
+        id = Helpers.Range(1, int.MaxValue);
         currentGen = new List<GenPop>();
         nextGenParents = new List<GenPop>();
         currentSpellCandidates = new List<SpellCandidate>();
@@ -743,36 +846,15 @@ public class GeneticAlgorithm
         isDone = false;
 
         //Add the trigger pattern thing
-        List<GeneticSpellComponent> bag = GenerateComponentBag(_components);
-        popLen = bag.Count;
+        GeneticComponentBag bag = new GeneticComponentBag(_components);
+        popLen = bag.GetSizeOfBag();
         for (int i = 0; i < maxPopSize; i++)
         {
-            currentGen.Add(new GenPop());
-            for (int c = 0; c < popLen; c++)
-            {
-                currentGen[i].components.Add(bag[c].Generate());
-            }
-            for (int k = 0; k < popLen; k++)
-            {
-                int j = Helpers.Range(k, popLen);
-                (currentGen[i].components[j], currentGen[i].components[k]) = (currentGen[i].components[k], currentGen[i].components[j]);
-            }
+            currentGen.Add(bag.GenerateGenPop());
         }
         lcs = new double[popLen + 1, popLen + 1];
         //For testing purpoises
         //Debug.Log(currentGen[0].ComputeRougeLF1(currentGen[0], 0));
-    }
-
-    private List<GeneticSpellComponent> GenerateComponentBag(in List<GeneticSpellComponent> _components)
-    {
-        List<GeneticSpellComponent> bag = new List<GeneticSpellComponent>();
-        int bagCount = _components.Count;
-        for (int i = 0; i < bagCount; i++)
-        {
-            bag.Add(_components[i]);
-            _components[i].id = (byte)(i + 1);
-        }
-        return bag;
     }
 
     private int GetIndexOfMin(in List<double> list)
@@ -790,19 +872,27 @@ public class GeneticAlgorithm
         return minIndex;
     }
 
-    public List<SpellCandidate> GetDisplayCandiadates()
+    public List<SpellCandidate> GetDisplayCandiadates(int _cutoffCandidateIndex, bool _getRandomFirstCandidate)
     {
         currentSpellCandidates.Clear();
         List<double> f1Sum = new List<double>();
-        for (int i = 0; i < maxPopSize; i++)
+        for (int i = 0; i < _cutoffCandidateIndex; i++)
         {
             f1Sum.Add(0);
         }
-        int candidateIndex;
         int candidateCount = currentSpellCandidates.Count;
-
-        AddCandidate(ref f1Sum, Helpers.Range(0, maxPopSize), maxPopSize, ref candidateCount);
-        for(int i = 0; candidateCount < maxCandidateNo && i < 100;)
+        int candidateIndex;
+        if (_getRandomFirstCandidate)
+        {
+            candidateIndex = Helpers.Range(0, _cutoffCandidateIndex);
+        }
+        else
+        {
+            candidateIndex = 0;
+        }
+        AddCandidate(ref f1Sum, candidateIndex, _cutoffCandidateIndex, ref candidateCount);
+        
+        for (int i = 0; candidateCount < maxCandidateNo && i < 100;)
         {
             candidateIndex = GetIndexOfMin(f1Sum);
             if (IsRepeatingCandidate(candidateIndex))
@@ -811,8 +901,8 @@ public class GeneticAlgorithm
                 i++;
             }
             else
-            { 
-                AddCandidate(ref f1Sum, candidateIndex, maxPopSize, ref candidateCount);
+            {
+                AddCandidate(ref f1Sum, candidateIndex, _cutoffCandidateIndex, ref candidateCount);
             }
         }
         return currentSpellCandidates;
@@ -925,7 +1015,7 @@ public class GeneticAlgorithm
     private void CalculateFitness()
     {
         int candCount = savedCandidates.Count;
-        foreach(GenPop pop in currentGen)
+        foreach (GenPop pop in currentGen)
         {
             pop.fitness = 0;
             for (int i = 0; i < candCount; i++)
@@ -935,7 +1025,7 @@ public class GeneticAlgorithm
         }
     }
 
-    private static int CompareFitness(GenPop x, GenPop y)
+    private static int CompareFitness(GenPop y, GenPop x)
     {
         if (x == null)
         {
@@ -944,7 +1034,7 @@ public class GeneticAlgorithm
                 return 0;
             }
             else
-            { 
+            {
                 return -1;
             }
         }
@@ -966,7 +1056,7 @@ public class GeneticAlgorithm
         currentGen.Sort(CompareFitness);
         for (int i = 0; i < aftercutPopSize; i++)
         {
-            currentGen[i].rank = 1 / aftercutPopSize * (survivalPressure - (2 * survivalPressure - 2) * i / (aftercutPopSize - 1));
+            currentGen[i].rank = (survivalPressure - (2 * survivalPressure - 2) * ((double)i / (aftercutPopSize - 1))) / aftercutPopSize;
         }
     }
 
@@ -994,11 +1084,10 @@ public class GeneticAlgorithm
                 }
             }
         }
-
         currentGen.Clear();
 
         int genCount = 0;
-        foreach(GenPop pop in savedCandidates)
+        foreach (GenPop pop in savedCandidates)
         {
             nextGenParents.Add(new GenPop(pop.components));
             currentGen.Add(new GenPop(pop.components));
@@ -1006,7 +1095,7 @@ public class GeneticAlgorithm
         }
 
         int parentCount = nextGenParents.Count;
-        while(genCount < maxPopSize)
+        while (genCount < maxPopSize)
         {
             Crossover(nextGenParents[Helpers.Range(0, parentCount)], nextGenParents[Helpers.Range(0, parentCount)]);
             genCount += 2;
@@ -1023,14 +1112,13 @@ public class GeneticAlgorithm
     public List<SpellCandidate> NextIterations(List<SpellCandidate> _candidates)
     {
         savedCandidates.Clear();
-        foreach(SpellCandidate c in _candidates) 
+        foreach (SpellCandidate c in _candidates)
         {
-            if(c.isChosen)
-            { 
+            if (c.isChosen)
+            {
                 savedCandidates.Add(new GenPop(currentGen[c.genId].components));
             }
         }
-        UnityEngine.Debug.Log("OK");
         for (int i = 0; i < displayGenIndex && currentGenIndex < maxGenIndex; i++, currentGenIndex++)
         {
             UnityEngine.Debug.Log(currentGenIndex);
@@ -1038,11 +1126,18 @@ public class GeneticAlgorithm
         }
         isDone = (currentGenIndex == maxGenIndex);
 
-        return GetDisplayCandiadates();
+        CalculateFitness();
+        currentGen.Sort(CompareFitness);
+        return GetDisplayCandiadates((int)MathF.Ceiling((1 -  ((float)currentGenIndex / maxGenIndex) / 2) * maxPopSize), false);
     }
 
     public MagicSpell GetResult(SpellCandidate candidate)
     {
         throw new NotImplementedException();
+    }
+
+    public List<SpellCandidate> GetFirstRoundOfCandidates()
+    {
+        return GetDisplayCandiadates(maxPopSize, true);
     }
 }

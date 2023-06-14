@@ -144,7 +144,7 @@ public class GeneticAlgObjectPool<T> where T : new()
             return temp;
         }
     }
-    public virtual void ReleaseObject(T _active)
+    public void ReleaseObject(T _active)
     {
         lock (availableObjects)
         {
@@ -173,9 +173,9 @@ public abstract class GeneticSpellComponent
 
     public abstract bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity);
 
-    public virtual bool Mutation(in float genCMFraction)
+    public virtual void Mutation(in float genCMFraction)
     {
-        return false;
+        
     }
 
     public abstract OriginSpellComponent GenerateOrigin(ElementData _element);
