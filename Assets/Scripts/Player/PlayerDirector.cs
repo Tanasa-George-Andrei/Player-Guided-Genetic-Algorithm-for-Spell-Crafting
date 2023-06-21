@@ -20,6 +20,8 @@ public class PlayerDirector : MonoBehaviour, IMagicObjectDirector
     [SerializeField]
     private ClampedFloatVariable health;
 
+    private int bouncesRemaining = 0;
+
 
     private void Awake()
     {
@@ -27,17 +29,18 @@ public class PlayerDirector : MonoBehaviour, IMagicObjectDirector
         camMotor = GetComponent<CameraMotor>();
         actions = GetComponent<PlayerAction>();
         health.OnValueChange += OnHealthChange;
-
+        bouncesRemaining = 0;
     }
 
     //Do the triggers;
-    public event IMagicObjectDirector.CollisionTrigger HitTrigger;
+    public event IMagicObjectDirector.CollisionTrigger OnHit;
     public event GenericTrigger OnObjectDisable;
-    public event GenericTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.DestroyTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.BounceTrigger OnBounce;
 
     void OnCollisionEnter(Collision collision)
     {
-        HitTrigger?.Invoke(collision);
+        OnHit?.Invoke(collision);
     }
 
     public float GetRemainingHealth()
@@ -49,13 +52,13 @@ public class PlayerDirector : MonoBehaviour, IMagicObjectDirector
     {
         return this.name;
     }
-    public IMagicObjectDirector GetPlaceholder()
+    public IMagicObjectDirector GetPlaceholder(bool _actualIsNull)
     {
-        return new MagicPlaceholderDirector(this, motor.GetCollider(), gameObject, this.name, transform.position, camMotor.GetCameraRotation());
+        return new MagicPlaceholderDirector(_actualIsNull ? null : this, motor.GetCollider(), gameObject, this.name, transform.position, camMotor.GetCameraRotation());
     }
     public Vector3 GetProjectilePosition()
     {
-        return camMotor.GetCameraPosition() + camMotor.GetCameraRotation() * new Vector3(0, -0.25f, 0.75f);
+        return camMotor.GetCameraPosition() + camMotor.GetCameraRotation() * new Vector3(0, 0, 2);
     }
 
     public Vector3 GetTargetDir(Vector3 _from)
@@ -77,6 +80,7 @@ public class PlayerDirector : MonoBehaviour, IMagicObjectDirector
         motor.Teleport(_pos);
         motor.ResetRotation(_rot.eulerAngles.y);
         camMotor.ResetRotation();
+        bouncesRemaining = 0;
         //gameObject.SetActive(true);
     }
 
@@ -162,7 +166,7 @@ public class PlayerDirector : MonoBehaviour, IMagicObjectDirector
         if(health.Value <= health.minValue)
         {
             Respawn();
-            OnObjectDestroy?.Invoke();
+            OnObjectDestroy?.Invoke(GetPlaceholder(true));
         }
     }
 
@@ -203,5 +207,15 @@ public class PlayerDirector : MonoBehaviour, IMagicObjectDirector
     public float GetRadiousFromCenter()
     {
         return motor.GetCollider().radius;
+    }
+
+    public void SetBounce(int _no)
+    {
+        bouncesRemaining += _no;
+    }
+
+    public Quaternion GetRotation()
+    {
+        return transform.rotation;
     }
 }

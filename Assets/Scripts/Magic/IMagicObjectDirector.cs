@@ -1,11 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Security.Policy;
 using UnityEngine;
 
 public delegate void GenericTrigger();
 public interface IMagicObjectDirector
 {
+    public void SetBounce(int _no);
+
     public float GetRadiousFromCenter();
 
     public void ModifyHealth(float _value);
@@ -29,12 +33,17 @@ public interface IMagicObjectDirector
     public void TeleportInDirection(Vector3 _dir, float _distance);
     public void Propel(Vector3 _dir, float _speed);
     public string GetName();
-    public IMagicObjectDirector GetPlaceholder();
+
+    public Quaternion GetRotation();
+    public IMagicObjectDirector GetPlaceholder(bool _actualIsNull);
 
     public delegate void CollisionTrigger(Collision _collision);
-    public event CollisionTrigger HitTrigger;
+    public delegate void BounceTrigger(IMagicObjectDirector _director, bool _isLastBounce);
+    public delegate void DestroyTrigger(IMagicObjectDirector _director);
+    public event CollisionTrigger OnHit;
+    public event BounceTrigger OnBounce;
 
     public event GenericTrigger OnObjectDisable;
-    public event GenericTrigger OnObjectDestroy;
+    public event DestroyTrigger OnObjectDestroy;
 
 }

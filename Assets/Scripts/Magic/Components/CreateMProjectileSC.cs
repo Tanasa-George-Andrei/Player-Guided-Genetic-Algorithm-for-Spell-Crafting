@@ -39,32 +39,34 @@ public class ACreateMProjectile : ActiveSpellComponent
     {
         if(instance == null) 
         {
-            GameObject tempObj = UnityEngine.Object.Instantiate(castData.element.projectile, history.target.GetProjectilePosition(), Quaternion.FromToRotation(Vector3.forward, history.target.GetTargetDir(history.target.GetProjectilePosition())));
+            GameObject tempObj = UnityEngine.Object.Instantiate(castData.element.projectile);
             instance = new MObjectInstance(tempObj, tempObj.GetComponent<IMagicObjectDirector>(), tempObj.GetComponent<Collider>());
         }
-        else
-        {
-            instance.director.ResetObject(history.target.GetProjectilePosition(), Quaternion.FromToRotation(Vector3.forward, history.target.GetTargetDir(history.target.GetProjectilePosition())));
-        }
-        instance.obj.name = castData.element.projectile.name + " " + UnityEngine.Random.Range(0,1000);
-
-        int hits = Physics.OverlapSphereNonAlloc(history.target.GetProjectilePosition(),instance.col.bounds.extents.y, historyColArr);
+        instance.director.OnObjectDisable += SetInactive;
+        int hits = Physics.OverlapSphereNonAlloc(history.target.GetProjectilePosition(), instance.col.bounds.extents.y, historyColArr);
         for (int i = 0; i < hits; i++)
         {
+            if (historyColArr[i] == instance.col)
+            {
+                continue;
+            }
             Physics.IgnoreCollision(instance.col, historyColArr[i], true);
             historyColList.Add(historyColArr[i]);
-            colReEnable.Add(MagicManager.Instance.StartCoroutine(ReEnableCol(i, historyColArr[i])));
+            colReEnable.Add(MagicManager.Instance.StartCoroutine(ReEnableCol(historyColArr[i])));
         }
-        origin.NextComponent(new SpellHistoryNode(instance.director,history), castData);
-        instance.director.OnObjectDisable += SetInactive;
+        instance.director.ResetObject(history.target.GetProjectilePosition(),
+            Quaternion.FromToRotation(Vector3.forward,
+            history.target.GetTargetDir(history.target.GetProjectilePosition())));
+        instance.obj.name = castData.element.projectile.name + " " + UnityEngine.Random.Range(0,1000);
+        origin.NextComponent(SpellHistoryNode.AddNode(instance.director, history), castData);
         state = ActiveSpellStates.Waiting;
     }
     //TODO: Modify for different time scales or make a merhod respoisble for finding if colliders roughly colide
     //Also if you make a custom overlap function also add a timeout
     //Note Spheres are easier to calculate for intersection
-    private IEnumerator ReEnableCol(int _index, Collider _col)
+    private IEnumerator ReEnableCol(Collider _col)
     {
-        yield return Helpers.GetWait(1f);
+        yield return Helpers.GetWait(2f);
         Physics.IgnoreCollision(instance.col, _col, false);
         historyColList.Remove(_col);
     }
@@ -86,7 +88,6 @@ public class ACreateMProjectile : ActiveSpellComponent
         origin = _origin;
         history = _history;
         castData = _castData;
-        ACreateMProjectile temp = (ACreateMProjectile)_active;
         state = ActiveSpellStates.Started;
         foreach(Coroutine co in colReEnable)
         {
@@ -119,10 +120,56 @@ public class ACreateMProjectile : ActiveSpellComponent
 
 public class OCreateMProjectile : OriginSpellComponent
 {
-    public OCreateMProjectile(ActiveSpellComponent _active) : base(_active, 25) {}
+    public OCreateMProjectile(ActiveSpellComponent _active) : base(_active, 1000) {}
 
     public override bool isOfRightType(ActiveSpellComponent _active)
     {
         return _active.GetType() == typeof(ACreateMProjectile);
+    }
+}
+
+public class GCreateMProjectile : GeneticSpellComponent
+{
+    public GCreateMProjectile()
+    {
+    }
+
+    public GCreateMProjectile(int _id) : base(_id)
+    {
+    }
+
+    public override GeneticSpellComponent Clone()
+    {
+        return new GCreateMProjectile(id);
+    }
+
+    public override bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity)
+    {
+        if (_other.GetType() == typeof(GCreateMProjectile))
+        {
+            similarity = 1;
+            return true;
+        }
+        similarity = 0;
+        return false;
+    }
+
+    public override GeneticSpellComponent Generate()
+    {
+        return new GCreateMProjectile(id);
+    }
+
+    public override OriginSpellComponent GenerateOrigin(ElementData _element)
+    {
+        return (new ACreateMProjectile()).GenerateOriginComponent();
+    }
+
+    public override string GetDisplayString()
+    {
+        return "Create Projectile";
+    }
+
+    public override void ParamMutation(in float genCMFraction)
+    {
     }
 }

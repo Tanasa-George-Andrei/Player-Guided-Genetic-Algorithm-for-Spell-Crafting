@@ -1,11 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Security.Policy;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerUIManager : MonoBehaviour
@@ -41,16 +37,15 @@ public class PlayerUIManager : MonoBehaviour
     private GameObject HUD;
     [SerializeField]
     private Image spellMakerIndicator;
-    [SerializeField] 
-    private Color nonInteractibleColor;
-    [SerializeField]
-    private Color interactibleColor;
     //[SerializeField]
     //private GameObject SMStart;
     //[SerializeField]
     //private GameObject SMStart;
     [SerializeField]
     private GameObject SMCandidateSelect;
+    [SerializeField]
+    private GameObject SMSpellFinish;
+    private SpellCandidate choiceCandidate = null;
     //[SerializeField]
     //private GameObject SMFinish;
 
@@ -70,11 +65,11 @@ public class PlayerUIManager : MonoBehaviour
     private GameObject candidateCardPrefab;
     [SerializeField]
     private GameObject SMCandidateSelectContent;
+    [SerializeField]
+    private GameObject SMSpellFinishContent;
 
     private List<CandidateUI> candidateUIData = new List<CandidateUI>();
     private List<SpellCandidate> candidateData;
-    private bool canSend = false;
-    private bool magicIsNotifing = true;
     private int spellAlgID = 0;
 
     public void SetToInactiveAll()
@@ -97,14 +92,6 @@ public class PlayerUIManager : MonoBehaviour
     public void ChangeToHUD()
     {
         ChangeToInterface(HUD);
-        if (magicIsNotifing)
-        {
-            spellMakerIndicator.color = interactibleColor;
-        }
-        else
-        {
-            spellMakerIndicator.color = nonInteractibleColor;
-        }
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -115,25 +102,33 @@ public class PlayerUIManager : MonoBehaviour
         pauseWaitCoroutine = StartCoroutine(WaitForPause());
     }
 
-    public void SetSpellCandidates(List<SpellCandidate> _candidateData, int _ID)
+    public void SetSpellCandidates(List<SpellCandidate> _candidateData, int _ID, bool _finished)
     {
         candidateData = new List<SpellCandidate>(_candidateData);
         int count = candidateData.Count - candidateUIData.Count;
         GameObject temp;
         for (int i = 0; i < count; i++)
         {
-            temp = Instantiate(candidateCardPrefab, SMCandidateSelectContent.transform);
+            temp = Instantiate(candidateCardPrefab, _finished ? SMSpellFinishContent.transform : SMCandidateSelectContent.transform);
             candidateUIData.Add(new CandidateUI(false, temp, temp.GetComponent<Button>(), temp.transform.GetChild(0).gameObject, temp.GetComponentInChildren<Outline>(), temp.GetComponentInChildren<TMP_Text>()));
         }
         spellAlgID = _ID;
         count = candidateData.Count;
         for (int i = 0; i < count; i++)
         {
+            candidateUIData[i].root.transform.parent = _finished ? SMSpellFinishContent.transform : SMCandidateSelectContent.transform;
             candidateUIData[i].root.SetActive(true);
             candidateUIData[i].textMesh.text = candidateData[i].displayString;
             candidateUIData[i].outline.enabled = false;
             int index = i;
-            candidateUIData[i].button.onClick.AddListener(() => ClickedOnCandidateUI(index));
+            if(!_finished) 
+            {
+                candidateUIData[i].button.onClick.AddListener(() => ClickedOnCandidateUI(index));
+            }
+            else
+            {
+                candidateUIData[i].button.onClick.AddListener(() => ClickedOnSpellChoiceUI(index));
+            }
         }
         //canSend = true;
     }
@@ -145,10 +140,29 @@ public class PlayerUIManager : MonoBehaviour
             candidateUIData[index].outline.enabled = candidateUIData[index].isSelected;
         }
     }
+    public void ClickedOnSpellChoiceUI(int index)
+    {
+        if (index >= 0 && index < candidateUIData.Count)
+        {
+            candidateUIData[index].isSelected = !candidateUIData[index].isSelected;
+            candidateUIData[index].outline.enabled = candidateUIData[index].isSelected;
+            choiceCandidate = candidateData[index];
+        }
+    }
 
     public void ChangeToCandidateSelect()
     {
         ChangeToInterface(SMCandidateSelect);
+        isPaused = true;
+        Time.timeScale = 0f;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void ChangeToSpellFinish()
+    {
+        ChangeToInterface(SMSpellFinish);
+        isPaused = true;
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -161,7 +175,7 @@ public class PlayerUIManager : MonoBehaviour
 
     public void ForwardCandidates()
     {
-        pauseWaitCoroutine = StartCoroutine(WaitForPause());
+        //pauseWaitCoroutine = StartCoroutine(WaitForPause());
         int count = candidateData.Count;
         int selectCount = 0;
         for (int i = 0; i < count; i++)
@@ -180,22 +194,21 @@ public class PlayerUIManager : MonoBehaviour
             }
             action.NextIteration(candidateData, spellAlgID);
             ChangeToHUD();
-            SetSMInteractNotification(false);
             //canSend = false;
         }
     }
 
-    public void SetSMInteractNotification(bool _canInteract)
+    public void FinishSpell()
     {
-        magicIsNotifing = _canInteract;
-        if (_canInteract)
+        action.FinishSpellCrafting(choiceCandidate);
+        int count = candidateUIData.Count;
+        for (int i = 0; i < count; i++)
         {
-            spellMakerIndicator.color = interactibleColor;
+            candidateUIData[i].root.SetActive(false);
+            candidateUIData[i].button.onClick.RemoveAllListeners();
+            candidateUIData[i].isSelected = false;
         }
-        else
-        {
-            spellMakerIndicator.color = nonInteractibleColor;
-        }
+        ChangeToHUD();
     }
 
     private void GameOver()

@@ -1,23 +1,24 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
-public class APropelMObject : ActiveSpellComponent
+public class APropel : ActiveSpellComponent
 {
     public float speed;
 
-    public APropelMObject(float _speed)
+    public APropel(float _speed)
     {
         speed = _speed;
     }
 
-    public APropelMObject(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData, float _speed) : base(_origin, _history, _castData)
+    public APropel(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData, float _speed) : base(_origin, _history, _castData)
     {
         speed = _speed;
     }
 
     public override void Execue()
     {
-        if (history.target.GetActualDirector() == null)
+        if (history.target.GetActualDirector() == null || !history.target.GetActualDirector().GetGameObject().activeSelf)
         {
             state = ActiveSpellStates.Finished;
             return;
@@ -25,7 +26,7 @@ public class APropelMObject : ActiveSpellComponent
         if (state == ActiveSpellStates.Started)
         {
             history.target.GetActualDirector().Propel(history.target.GetPropelDir(), speed);
-            origin.NextComponent(new SpellHistoryNode(
+            origin.NextComponent(SpellHistoryNode.AddNode(
                 new MagicPlaceholderDirector(
                     history.target.GetActualDirector(), 
                     history.target.GetActualDirector().GetCollider(),
@@ -41,7 +42,7 @@ public class APropelMObject : ActiveSpellComponent
 
     public override ActiveSpellComponent Clone(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData)
     {
-        return new APropelMObject(_origin, _history, _castData, speed);
+        return new APropel(_origin, _history, _castData, speed);
     }
 
     public override void Reset(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData, ActiveSpellComponent _active)
@@ -49,7 +50,7 @@ public class APropelMObject : ActiveSpellComponent
         origin = _origin;
         history = _history;
         castData = _castData;
-        APropelMObject temp = (APropelMObject)_active;
+        APropel temp = (APropel)_active;
         state = ActiveSpellStates.Started;
         speed = temp.speed;
     }
@@ -72,6 +73,71 @@ public class OPropelMObject : OriginSpellComponent
 
     public override bool isOfRightType(ActiveSpellComponent _active)
     {
-        return _active.GetType() == typeof(APropelMObject);
+        return _active.GetType() == typeof(APropel);
+    }
+}
+
+public class GPropel : GeneticSpellComponentInt
+{
+    public GPropel() : base(2, 60)
+    {
+    }
+
+    public GPropel(int _id, int _value) : base(_id, _value, 2, 60)
+    {
+    }
+
+    public float GetSpeed()
+    {
+        return (value * 0.5f);
+    }
+
+    public float GetDistance()
+    {
+        return GetSpeed();
+    }
+
+    public override GeneticSpellComponent Clone()
+    {
+        return new GPropel(id, value);
+    }
+
+    public override bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity)
+    {
+        if (_other.GetType() == typeof(GPropel))
+        {
+            GPropel temp = (GPropel)_other;
+            similarity = DifFunc(MathF.Abs(GetSpeed() - temp.GetSpeed()) / ((upper - lower) * 0.5f));
+            return true;
+        }
+        else if (_other.GetType() == typeof(GDashDir))
+        {
+            GDashDir temp = (GDashDir)_other;
+            similarity = DropoffFunc(genCMFraction) * DifFunc(MathF.Abs(GetDistance() - temp.GetDistance()) / ((upper - lower) * 0.5f));
+            return true;
+        }
+        else if (_other.GetType() == typeof(GTeleportDir))
+        {
+            GTeleportDir temp = (GTeleportDir)_other;
+            similarity = 0.9f * DropoffFunc(genCMFraction) * DifFunc(MathF.Abs(GetDistance() - temp.GetDistance()) / ((upper - lower) * 0.5f));
+            return true;
+        }
+        similarity = 0;
+        return false;
+    }
+
+    public override GeneticSpellComponent Generate()
+    {
+        return new GPropel(id, Helpers.Range(lower, upper));
+    }
+
+    public override OriginSpellComponent GenerateOrigin(ElementData _element)
+    {
+        return (new APropel(GetDistance())).GenerateOriginComponent();
+    }
+
+    public override string GetDisplayString()
+    {
+        return "Propel at " + GetSpeed() +"m/s";
     }
 }

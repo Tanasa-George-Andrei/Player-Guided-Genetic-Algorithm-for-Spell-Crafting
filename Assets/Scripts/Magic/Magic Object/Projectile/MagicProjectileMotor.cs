@@ -37,9 +37,27 @@ public class MagicProjectileMotor : MonoBehaviour
         isGrounded = Physics.Raycast(transform.position, gravityDirection, out hit, col.radius*2, 1<<8);
     }
 
+    public void ReflectMovementDirection(Vector3 _normal)
+    {
+        switch (movementType)
+        {
+            case ProjectileMovementType.Normal:
+                propelVelocity = Vector3.Reflect(propelVelocity.normalized, _normal) * propelVelocity.magnitude;
+                break;
+            case ProjectileMovementType.Dash:
+                dashVelocity = Vector3.Reflect(dashVelocity.normalized, _normal) * dashVelocity.magnitude;
+                break;
+            case ProjectileMovementType.None:
+                break;
+            default:
+                break;
+        }
+    }
+
     public void ResetVelocity()
     {
         dashVelocity = Vector3.zero;
+        propelVelocity = Vector3.zero;
     }
 
     public SphereCollider GetCollider()
@@ -177,6 +195,7 @@ public class MagicProjectileMotor : MonoBehaviour
         col = GetComponent<SphereCollider>();
         rb = GetComponent<Rigidbody>();
         dashVelocity = Vector3.zero;
+        propelVelocity = Vector3.zero;
     }
 
     private void FixedUpdate()

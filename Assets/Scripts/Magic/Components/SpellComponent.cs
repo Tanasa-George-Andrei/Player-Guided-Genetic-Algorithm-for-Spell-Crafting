@@ -104,7 +104,7 @@ public abstract class OriginSpellComponent
             inUseObjects[i].EndComponent();
         }
 
-        //Debug.Log(this.GetType() + " | " + objectPool.Count);
+        //Debug.Log(this.GetType() + " | " + (inUseObjects.Count + availableObjects.Count));
         MagicManager.Instance.AddActiveSpellComponent(temp);
     }
 
@@ -157,14 +157,14 @@ public class GeneticAlgObjectPool<T> where T : new()
 
 public abstract class GeneticSpellComponent
 {
-    public byte id;
+    public int id;
 
     public GeneticSpellComponent()
     {
         id = 0;
     }
 
-    protected GeneticSpellComponent(byte _id)
+    protected GeneticSpellComponent(int _id)
     {
         id = _id;
     }
@@ -173,9 +173,10 @@ public abstract class GeneticSpellComponent
 
     public abstract bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity);
 
-    public virtual void Mutation(in float genCMFraction)
+    public abstract void ParamMutation(in float genCMFraction);
+    public virtual GeneticSpellComponent CompMutation()
     {
-        
+        return this;
     }
 
     public abstract OriginSpellComponent GenerateOrigin(ElementData _element);
@@ -196,9 +197,38 @@ public abstract class GeneticSpellComponent
     public abstract GeneticSpellComponent Clone();
 }
 
-public abstract class GenericGeneticSpellComponent<T> : GeneticSpellComponent where T : new()
+public abstract class GenericOPGeneticSpellComponent<T> : GeneticSpellComponent where T : new()
 {
 
     protected static GeneticAlgObjectPool<T> geneticAlgObjectPool = new GeneticAlgObjectPool<T>();
+
+}
+
+public abstract class GeneticSpellComponentInt : GeneticSpellComponent
+{
+    protected readonly int lower;
+    protected readonly int upper;
+    public int value;
+
+    public GeneticSpellComponentInt(int _lower, int _upper)
+    {
+        id = 0;
+        lower = _lower;
+        upper = _upper;
+    }
+
+    protected GeneticSpellComponentInt(int _id, int _value, int _lower, int _upper)
+    {
+        id = _id;
+        lower = _lower;
+        upper = _upper;
+        value = _value;
+    }
+
+    public override void ParamMutation(in float genCMFraction)
+    {
+        float range = MathF.Ceiling((upper - lower) * 0.75f * (1 - genCMFraction));
+        value = (int)MathF.Ceiling(Helpers.Range(MathF.Max(lower, value - range / 2), MathF.Min(upper, value + range / 2)));
+    }
 
 }

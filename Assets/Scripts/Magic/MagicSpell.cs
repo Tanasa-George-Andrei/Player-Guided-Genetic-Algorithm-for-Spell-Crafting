@@ -39,7 +39,7 @@ public class MagicSpell
         }
         else
         {
-            element.ApplyEffects(_history, _castData);
+            _castData.element.ApplyEffects(_history, _castData);
         }
     }
 
@@ -59,9 +59,9 @@ public class MagicSpell
     {
         //if(compCount > 0) 
         //{
-        //    spellComponents[0].CreateActiveInstance(new SpellHistoryNode(action.director, null), new SpellCastData(action.director, this, element));
+        //    spellComponents[0].CreateActiveInstance(SpellHistoryNode.AddNode(action.director, null), new SpellCastData(action.director, this, element));
         //}
-        NextComponent(-1, new SpellHistoryNode(action.director, null), new SpellCastData(action.director, this, element));
+        NextComponent(-1, SpellHistoryNode.AddNode(action.director, null), new SpellCastData(action.director, this, element));
         if (!canBeCast && castCoroutine != null)
         {
             action.StopCoroutine(castCoroutine);

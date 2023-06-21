@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7799eea5a025fa04198d396badb4c4a4, type: 3}
-  m_Name: Arcana
+  m_Name: Void
   m_EditorClassIdentifier: 
-  projectile: {fileID: 2097720673604287297, guid: 36eea4cea77cf50408cf18ab917ec588, type: 3}
-  dashDurationInSeconds: 1
-  material: {fileID: 2100000, guid: 8da09087b08f7e14babe7f60302bc598, type: 2}
+  projectile: {fileID: 2097720673604287297, guid: 5e066cbb22329c043a00c5f337012435, type: 3}
+  dashDurationInSeconds: 2
+  material: {fileID: 2100000, guid: 9406e00601a51e845a6707cc407bf5a1, type: 2}
   mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  oppositeElement: {fileID: 11400000, guid: 47eb567d992b8da4c9b53e6cc3d8f1a9, type: 2}
+  oppositeElement: {fileID: 11400000, guid: ad0814aeefd519c45b17ab3c85dd42c3, type: 2}
   endEffects:
-  - rid: 6328861655650009088
+  - rid: 6328861969054433280
   references:
     version: 2
     RefIds:
-    - rid: 6328861655650009088
+    - rid: 6328861969054433280
       type: {class: InstantDamageEffect, ns: , asm: Assembly-CSharp}
       data:
-        damage: 15
+        damage: 30

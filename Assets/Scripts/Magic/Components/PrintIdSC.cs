@@ -16,7 +16,9 @@ public class APrintId : ActiveSpellComponent
 
     public override void Execue()
     {
-        UnityEngine.Debug.Log(text.Replace("%id",history.target.GetName()));
+        Debug.Log(Helpers.WriteMagicHistory(history));
+        Debug.Log(text.Replace("%id",history.target.GetName()));
+        Debug.Log("___");
         state = ActiveSpellStates.Finished;
     }
 

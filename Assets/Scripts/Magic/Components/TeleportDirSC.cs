@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -20,13 +21,13 @@ public class ATeleportDir : ActiveSpellComponent
     {
         if(state == ActiveSpellStates.Started)
         {
-            if (history.target.GetActualDirector() == null)
+            if (history.target.GetActualDirector() == null || !history.target.GetActualDirector().GetGameObject().activeSelf)
             {
                 state = ActiveSpellStates.Finished;
                 return;
             }
             history.target.GetActualDirector().TeleportInDirection(history.target.GetFlatDir(), distance);
-            origin.NextComponent(new SpellHistoryNode(
+            origin.NextComponent(SpellHistoryNode.AddNode(
                 new MagicPlaceholderDirector(
                     history.target.GetActualDirector(), 
                     history.target.GetActualDirector().GetCollider(),
@@ -74,5 +75,65 @@ public class OTeleportDir : OriginSpellComponent
     public override bool isOfRightType(ActiveSpellComponent _active)
     {
         return _active.GetType() == typeof(ATeleportDir);
+    }
+}
+
+public class GTeleportDir : GeneticSpellComponentInt
+{
+    public GTeleportDir() : base(2, 60)
+    {
+    }
+
+    public GTeleportDir(int _id, int _value) : base(_id, _value, 2, 60)
+    {
+    }
+
+    public float GetDistance()
+    {
+        return value * 0.5f;
+    }
+
+    public override GeneticSpellComponent Clone()
+    {
+        return new GTeleportDir(id, value);
+    }
+
+    public override bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity)
+    {
+        if (_other.GetType() == typeof(GTeleportDir))
+        {
+            GTeleportDir temp = (GTeleportDir)_other;
+            similarity = DifFunc(MathF.Abs(GetDistance() - temp.GetDistance()) / ((upper - lower) * 0.5f));
+            return true;
+        }
+        else if (_other.GetType() == typeof(GDashDir))
+        {
+            GDashDir temp = (GDashDir)_other;
+            similarity = 0.9f * DropoffFunc(genCMFraction) * DifFunc(MathF.Abs(GetDistance() - temp.GetDistance()) / ((upper - lower) * 0.5f));
+            return true;
+        }
+        else if (_other.GetType() == typeof(GPropel))
+        {
+            GPropel temp = (GPropel)_other;
+            similarity = 0.9f * DropoffFunc(genCMFraction) * DifFunc(MathF.Abs(GetDistance() - temp.GetDistance()) / ((upper - lower) * 0.5f));
+            return true;
+        }
+        similarity = 0;
+        return false;
+    }
+
+    public override GeneticSpellComponent Generate()
+    {
+        return new GTeleportDir(id, Helpers.Range(lower, upper));
+    }
+
+    public override OriginSpellComponent GenerateOrigin(ElementData _element)
+    {
+        return (new ATeleportDir(GetDistance())).GenerateOriginComponent();
+    }
+
+    public override string GetDisplayString()
+    {
+        return "Teleport for " + GetDistance() + "m";
     }
 }

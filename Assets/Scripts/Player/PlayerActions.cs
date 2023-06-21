@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
+
+
 [RequireComponent(typeof(PlayerDirector))]
 public class PlayerAction : MonoBehaviour
 {
@@ -20,7 +22,6 @@ public class PlayerAction : MonoBehaviour
     private int lastCastSpellIndex = -1;
 
     private bool creatingSpell = false;
-    private bool finishedStep = false;
     private bool isUIOpen = false;
 
     //Note It might run even when exiting play mode
@@ -36,14 +37,31 @@ public class PlayerAction : MonoBehaviour
             PlayerUIManager.Instance.ExitCandidateSelect();
             isUIOpen = false;
         }
-        else if (finishedStep) 
+        else
         {
-            PlayerUIManager.Instance.ChangeToCandidateSelect();
+            if (alg.IsDone)
+            {
+                PlayerUIManager.Instance.ChangeToSpellFinish();
+            }
+            else
+            {
+                PlayerUIManager.Instance.ChangeToCandidateSelect();
+            }
             isUIOpen = true;
         }
     }
 
+    public void FinishSpellCrafting(SpellCandidate _candidate)
+    {
+        spells[1] = SpellBuilder.GenerateSpell(element, _candidate.spellChromosome.components);
+        spellTimers[1].maxValue = 1;
+        spells[1].Equip(this, spellTimers[1]);
+        isUIOpen = false;
+        creatingSpell = false;
+    }
+
     private GeneticAlgorithm alg;
+    private List<SpellCandidate> candidates;
     private void StartSpellMaker()
     {
         creatingSpell = true;
@@ -54,10 +72,9 @@ public class PlayerAction : MonoBehaviour
         //componentBag.Add(new GPierce());
         //componentBag.Add(new GFork());
         //componentBag.Add(new GSticky());
-        alg = new GeneticAlgorithm(componentBag, 100, 200, 12, 0.3f, 0.1f, 0.2f, 0.3f, 1.4f);
-        PlayerUIManager.Instance.SetSpellCandidates(alg.GetFirstRoundOfCandidates(), alg.ID);
-        PlayerUIManager.Instance.SetSMInteractNotification(true);
-        finishedStep = true;
+        alg = new GeneticAlgorithm(componentBag, 5000, 100, 20, 0.3f, 0.1f, 0.2f, 10, 1.4f);
+        candidates = alg.GetFirstRoundOfCandidates();
+        PlayerUIManager.Instance.SetSpellCandidates(candidates, alg.ID, alg.IsDone);
     }
 
     public void NextIteration(List<SpellCandidate> _candidates , int _ID)
@@ -65,9 +82,7 @@ public class PlayerAction : MonoBehaviour
         isUIOpen = false;
         if (alg.ID == _ID && !alg.IsDone) 
         {
-            PlayerUIManager.Instance.SetSpellCandidates(alg.NextIterations(_candidates), alg.ID);
-            PlayerUIManager.Instance.SetSMInteractNotification(true);
-            finishedStep = true;
+            PlayerUIManager.Instance.SetSpellCandidates(alg.NextIterations(_candidates), alg.ID, alg.IsDone);
         }
         else if (alg.ID == _ID)
         {
@@ -139,17 +154,9 @@ public class PlayerAction : MonoBehaviour
     private void Awake()
     {
         director = GetComponent<PlayerDirector>();
-        spells[0] = SpellBuilder.GenerateSpell(element, new List<ActiveSpellComponent>() { new ADashDir(20), new ACreateMProjectile(), new ATimeTrigger(10), new AExplode(10) });
-        spellTimers[0].maxValue = 10;
-        spells[0].Equip(this, spellTimers[0]);
-        spells[1] = SpellBuilder.GenerateSpell(element, new List<ActiveSpellComponent>() { new ACreateMProjectile(), new APropelMObject(30), new ACollisionTrigger() });
-        spellTimers[1].maxValue = 5;
-        spells[1].Equip(this, spellTimers[1]);
-        spells[2] = SpellBuilder.GenerateSpell(element, new List<ActiveSpellComponent>() { new ACreateMProjectile(), new APropelMObject(30), new ACollisionTrigger(), new AExplode(25) });
-        spellTimers[2].maxValue = 25;
+        spells[2] = SpellBuilder.GenerateSpell(element, new List<ActiveSpellComponent>() {new AFork(5), new ACreateMProjectile(), new APropel(30), new ACollisionTrigger(), new AChangeSpellElement(), new AExplode(1), new APrintId("%id") });
+        spellTimers[2].maxValue = 1;
         spells[2].Equip(this, spellTimers[2]);
-        spells[3] = SpellBuilder.GenerateSpell(element, new List<ActiveSpellComponent>() { new ATeleportDir(10), new ACreateMProjectile(), new ATimeTrigger(10), new AExplode(25) });
-        spellTimers[3].maxValue = 30;
-        spells[3].Equip(this, spellTimers[3]);
+
     }
 }

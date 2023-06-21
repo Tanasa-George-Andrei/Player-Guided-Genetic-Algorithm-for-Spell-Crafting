@@ -16,12 +16,12 @@ GameObject:
   - component: {fileID: 8046808189289234710}
   - component: {fileID: 2171706158345018378}
   m_Layer: 9
-  m_Name: Magic Projectile
+  m_Name: Arcane Magic Projectile
   m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6689581079096628549
 Transform:
   m_ObjectHideFlags: 0
@@ -161,4 +161,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 672072c86b2259740aff12071061045e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  destroyOnContact: 1
+  motor: {fileID: 8046808189289234710}
   maxHealth: 20

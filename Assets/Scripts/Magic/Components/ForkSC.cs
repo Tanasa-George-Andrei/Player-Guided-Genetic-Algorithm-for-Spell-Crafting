@@ -2,19 +2,19 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class ATimeTrigger : ActiveSpellComponent
+public class AFork : ActiveSpellComponent
 {
-    public float time;
+    public int branches;
     private Coroutine timerCoroutine;
 
-    public ATimeTrigger(float _time)
+    public AFork(int _branches)
     {
-        time = _time;
+        branches = _branches;
     }
 
-    public ATimeTrigger(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData, float _time) : base(_origin, _history, _castData)
+    public AFork(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData, int _branches) : base(_origin, _history, _castData)
     {
-        time = _time;
+        branches = _branches;
     }
 
     public override void Execue()
@@ -26,7 +26,11 @@ public class ATimeTrigger : ActiveSpellComponent
 
     private IEnumerator Timer()
     {
-        yield return Helpers.GetWait(time);
+        for (int i = 0; i < branches; i++)
+        {
+            origin.NextComponent(history, castData);
+            yield return Helpers.GetWait(0.25f);
+        }
         FinishTimer(null);
     }
 
@@ -34,13 +38,12 @@ public class ATimeTrigger : ActiveSpellComponent
     {
         MagicManager.Instance.StopCoroutine(timerCoroutine);
         history.target.GetActualDirector().OnObjectDestroy -= FinishTimer;
-        origin.NextComponent(history, castData);
         state = ActiveSpellStates.Finished;
     }
 
     public override ActiveSpellComponent Clone(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData)
     {
-        return new ATimeTrigger(_origin, _history, _castData,time);
+        return new AFork(_origin, _history, _castData,branches);
     }
 
     public override void Reset(OriginSpellComponent _origin, SpellHistoryNode _history, SpellCastData _castData, ActiveSpellComponent _active)
@@ -51,18 +54,18 @@ public class ATimeTrigger : ActiveSpellComponent
         history = _history;
         castData = _castData;
         state = ActiveSpellStates.Started;
-        ATimeTrigger temp = (ATimeTrigger)_active;
-        time = temp.time;
+        AFork temp = (AFork)_active;
+        branches = temp.branches;
     }
 
     public override OriginSpellComponent GenerateOriginComponent()
     {
-        return new OTimeTrigger(this);
+        return new OFork(this);
     }
 
     public override string ToString()
     {
-        return "TimeTrigger";
+        return "Fork";
     }
 
     public override void EndComponent()
@@ -72,41 +75,36 @@ public class ATimeTrigger : ActiveSpellComponent
 
 }
 
-public class OTimeTrigger : OriginSpellComponent
+public class OFork : OriginSpellComponent
 {
-    public OTimeTrigger(ActiveSpellComponent _active) : base(_active, 25) {}
+    public OFork(ActiveSpellComponent _active) : base(_active, 25) {}
 
     public override bool isOfRightType(ActiveSpellComponent _active)
     {
-        return _active.GetType() == typeof(ATimeTrigger);
+        return _active.GetType() == typeof(AFork);
     }
 }
 
-public class GTimeTrigger : GeneticSpellComponentInt
+public class GFork : GeneticSpellComponentInt
 {
-    public GTimeTrigger() : base(1, 60)
+    public GFork() : base(1, 10)
     {
     }
 
-    public GTimeTrigger(int _id, int _value) : base(_id, _value, 1, 60)
+    public GFork(int _id, int _value) : base(_id, _value, 1, 10)
     {
-    }
-
-    public float GetWaitTime()
-    {
-        return value * 0.5f;
     }
 
     public override GeneticSpellComponent Clone()
     {
-        return new GTimeTrigger(id, value);
+        return new GFork(id, value);
     }
 
     public override bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity)
     {
-        if (_other.GetType() == typeof(GTimeTrigger))
+        if (_other.GetType() == typeof(GFork))
         {
-            GTimeTrigger temp = (GTimeTrigger)_other;
+            GFork temp = (GFork)_other;
             similarity = DifFunc(MathF.Abs(value - temp.value) / (float)(upper - lower));
             return true;
         }
@@ -116,25 +114,16 @@ public class GTimeTrigger : GeneticSpellComponentInt
 
     public override GeneticSpellComponent Generate()
     {
-        return new GTimeTrigger(id, Helpers.Range(lower, upper));
+        return new GFork(id, Helpers.Range(lower, upper));
     }
 
     public override OriginSpellComponent GenerateOrigin(ElementData _element)
     {
-        return (new ATimeTrigger(GetWaitTime())).GenerateOriginComponent();
+        return (new AFork(value)).GenerateOriginComponent();
     }
 
     public override string GetDisplayString()
     {
-        return "Wait for " + GetWaitTime() + "s";
-    }
-
-    public override void ParamMutation(in float genCMFraction)
-    {
-    }
-
-    public override GeneticSpellComponent CompMutation()
-    {
-        return GeneticComponentBag.triggerList[Helpers.Range(0, GeneticComponentBag.triggerList.Length)].Generate();
+        return "Fork " + value + " times";
     }
 }

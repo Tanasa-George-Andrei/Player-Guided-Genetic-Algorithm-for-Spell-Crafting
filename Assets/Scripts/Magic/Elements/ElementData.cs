@@ -8,15 +8,13 @@ using UnityEngine;
 public class ElementData : ScriptableObject
 {
     public GameObject projectile;
-    public float projectileDownScalar;
-    public float projectileSpreadAngle;
-    public float projectileBurstIntervalSeconds;
-    public float gravityAcceleration;
-    public float drag;
-
-    public bool destroyOnContact;
 
     public float dashDurationInSeconds;
+
+    public Material material;
+    public Mesh mesh;
+
+    public ElementData oppositeElement;
 
     [SerializeReference]
     private List<ElementEffect> endEffects;

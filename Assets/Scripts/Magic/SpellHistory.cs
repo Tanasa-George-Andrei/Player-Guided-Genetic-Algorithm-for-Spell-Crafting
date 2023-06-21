@@ -11,7 +11,27 @@ public class SpellHistoryNode
     {
         target = _target;
         prev = _prev;
+        if(target.GetType() != typeof(MagicPlaceholderDirector))
+        {
+            target.OnObjectDestroy += ReplaceWithPlaceholder;
+        }
     }
+
+    public void ReplaceWithPlaceholder(IMagicObjectDirector _director)
+    {
+        target.OnObjectDestroy -= ReplaceWithPlaceholder;
+        target = _director;
+    }
+
+    public static SpellHistoryNode AddNode(IMagicObjectDirector _target, SpellHistoryNode _prev)
+    {
+        if(_target == null)
+        {
+            return _prev;
+        }
+        return new SpellHistoryNode(_target, _prev);
+    }
+
 }
 
 public class SpellCastData

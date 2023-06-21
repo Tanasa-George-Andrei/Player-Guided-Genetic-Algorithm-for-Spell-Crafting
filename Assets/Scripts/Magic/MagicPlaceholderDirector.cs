@@ -13,9 +13,10 @@ public class MagicPlaceholderDirector : IMagicObjectDirector
     private Vector3 position;
     private Quaternion rotation;
 
-    public event IMagicObjectDirector.CollisionTrigger HitTrigger;
+    public event IMagicObjectDirector.CollisionTrigger OnHit;
     public event GenericTrigger OnObjectDisable;
-    public event GenericTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.DestroyTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.BounceTrigger OnBounce;
 
     public MagicPlaceholderDirector(IMagicObjectDirector _actualDirector, Collider _collider, GameObject _gObject, string _name, Vector3 _position, Quaternion _rotation)
     {
@@ -28,7 +29,16 @@ public class MagicPlaceholderDirector : IMagicObjectDirector
         //actualDirector.HitTrigger += HitTrigger;
         //actualDirector.OnObjectDestroy += OnObjectDestroy;
         //actualDirector.OnObjectDestroy += OnObjectDisable;
-        //actualDirector.OnObjectDisable += OnObjectDisable;
+        if(actualDirector != null) 
+        {
+            actualDirector.OnObjectDisable += RemoveActualDirector;
+        }
+    }
+
+    public void RemoveActualDirector()
+    {
+        actualDirector.OnObjectDisable -= RemoveActualDirector;
+        actualDirector = null;
     }
 
     public IMagicObjectDirector GetActualDirector()
@@ -51,7 +61,7 @@ public class MagicPlaceholderDirector : IMagicObjectDirector
         return name + " Placeholder";
     }
 
-    public IMagicObjectDirector GetPlaceholder()
+    public IMagicObjectDirector GetPlaceholder(bool _actualIsNull)
     {
         return this;
     }
@@ -131,5 +141,15 @@ public class MagicPlaceholderDirector : IMagicObjectDirector
     public float GetRadiousFromCenter()
     {
         return 0;
+    }
+
+    public void SetBounce(int _no)
+    {
+        actualDirector.SetBounce(_no);
+    }
+
+    public Quaternion GetRotation()
+    {
+        return rotation;
     }
 }

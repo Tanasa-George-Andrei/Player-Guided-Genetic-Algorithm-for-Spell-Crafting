@@ -39,17 +39,16 @@ public class ASpecialTrigger : ActiveSpellComponent
         history = _history;
         castData = _castData;
         state = ActiveSpellStates.Started;
-        ASpecialTrigger temp = (ASpecialTrigger)_active;
     }
 
     public override OriginSpellComponent GenerateOriginComponent()
     {
-        return new OSpecialTriggerId(this);
+        return new OSpecialTrigger(this);
     }
 
     public override string ToString()
     {
-        return "SpecialTriggerId";
+        return "SpecialTrigger";
     }
 
     public override void EndComponent()
@@ -58,12 +57,63 @@ public class ASpecialTrigger : ActiveSpellComponent
     }
 }
 
-public class OSpecialTriggerId : OriginSpellComponent
+public class OSpecialTrigger : OriginSpellComponent
 {
-    public OSpecialTriggerId(ActiveSpellComponent _active) : base(_active, 25) {}
+    public OSpecialTrigger(ActiveSpellComponent _active) : base(_active, 25) {}
 
     public override bool isOfRightType(ActiveSpellComponent _active)
     {
         return _active.GetType() == typeof(ASpecialTrigger);
+    }
+}
+
+public class GSpecialTrigger : GeneticSpellComponent
+{
+    public GSpecialTrigger()
+    {
+    }
+
+    public GSpecialTrigger(int _id) : base(_id)
+    {
+    }
+
+    public override GeneticSpellComponent Clone()
+    {
+        return new GSpecialTrigger(id);
+    }
+
+    public override bool CompareComponent(in GeneticSpellComponent _other, in float genCMFraction, out double similarity)
+    {
+        if (_other.GetType() == typeof(GSpecialTrigger))
+        {
+            similarity = 1;
+            return true;
+        }
+        similarity = 0;
+        return false;
+    }
+
+    public override GeneticSpellComponent Generate()
+    {
+        return new GSpecialTrigger(id);
+    }
+
+    public override OriginSpellComponent GenerateOrigin(ElementData _element)
+    {
+        return (new ASpecialTrigger()).GenerateOriginComponent();
+    }
+
+    public override string GetDisplayString()
+    {
+        return "On Special Key";
+    }
+
+    public override void ParamMutation(in float genCMFraction)
+    {
+    }
+
+    public override GeneticSpellComponent CompMutation()
+    {
+        return GeneticComponentBag.triggerList[Helpers.Range(0, GeneticComponentBag.triggerList.Length)].Generate();
     }
 }

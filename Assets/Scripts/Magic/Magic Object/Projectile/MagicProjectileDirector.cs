@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,19 +6,53 @@ using UnityEngine;
 [RequireComponent(typeof(MagicProjectileMotor))]
 public class MagicProjectileDirector : MonoBehaviour, IMagicObjectDirector
 {
+    [SerializeField]
+    private bool destroyOnContact = true;
+
+    [SerializeField]
     private MagicProjectileMotor motor;
 
     private float health;
     [SerializeField]
     private float maxHealth = 20;
 
-    public event IMagicObjectDirector.CollisionTrigger HitTrigger;
+    public event IMagicObjectDirector.CollisionTrigger OnHit;
     public event GenericTrigger OnObjectDisable;
-    public event GenericTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.DestroyTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.BounceTrigger OnBounce;
+
+    private int bouncesRemaining = 0;
+
+    private void Awake()
+    {
+        //StartCoroutine(ProjectileEnableTimer());
+        health = maxHealth;
+        bouncesRemaining = 0;
+    }
 
     void OnCollisionEnter(Collision collision)
     {
-        HitTrigger?.Invoke(collision);
+        OnHit?.Invoke(collision);
+        if(destroyOnContact && bouncesRemaining == 0)
+        {
+            Damage(maxHealth, null);
+        }
+        if(bouncesRemaining > 0) 
+        {
+            motor.ReflectMovementDirection(collision.GetContact(0).normal);
+            IMagicObjectDirector tempDirector;
+            tempDirector = collision.GetContact(0).otherCollider.gameObject.GetComponent<IMagicObjectDirector>();
+            OnBounce?.Invoke(new MagicPlaceholderDirector(
+            tempDirector,
+            collision.GetContact(0).otherCollider,
+            collision.GetContact(0).otherCollider.gameObject,
+            collision.GetContact(0).otherCollider.gameObject.name,
+            collision.GetContact(0).point,
+            Quaternion.FromToRotation(Vector3.forward, collision.GetContact(0).normal
+                )), bouncesRemaining == 1);
+            bouncesRemaining--;
+        }
+        
     }
 
     public void DisableObject()
@@ -46,9 +81,9 @@ public class MagicProjectileDirector : MonoBehaviour, IMagicObjectDirector
         return gameObject.name;
     }
 
-    public IMagicObjectDirector GetPlaceholder()
+    public IMagicObjectDirector GetPlaceholder(bool _actualIsNull)
     {
-        return new MagicPlaceholderDirector(this, motor.GetCollider(), gameObject, this.name, transform.position, transform.rotation);
+        return new MagicPlaceholderDirector(_actualIsNull ? null : this, motor.GetCollider(), gameObject, this.name, transform.position, transform.rotation);
     }
 
     public Vector3 GetProjectilePosition()
@@ -76,9 +111,18 @@ public class MagicProjectileDirector : MonoBehaviour, IMagicObjectDirector
     {
         transform.position = _pos;
         transform.rotation = _rot;
+        bouncesRemaining = 0;
         motor.ResetVelocity();
         gameObject.SetActive(true);
-        StartCoroutine(ProjectileEnableTimer());
+        //StartCoroutine(ProjectileEnableTimer());
+        //foreach (Delegate d in OnHit.GetInvocationList())
+        //{
+        //    OnHit -= (IMagicObjectDirector.CollisionTrigger)d;
+        //}
+        //foreach (Delegate d in OnBounce.GetInvocationList())
+        //{
+        //    OnBounce -= (IMagicObjectDirector.BounceTrigger)d;
+        //}
     }
 
     void OnEnable()
@@ -98,15 +142,9 @@ public class MagicProjectileDirector : MonoBehaviour, IMagicObjectDirector
 
     private IEnumerator ProjectileEnableTimer()
     {
-        yield return Helpers.GetWait(30f);
-        DisableObject();
-    }
-
-    private void Awake()
-    {
-        motor = GetComponent<MagicProjectileMotor>();
-        StartCoroutine(ProjectileEnableTimer());
-        health = maxHealth;
+        yield return Helpers.GetWait(300f);
+        Damage(maxHealth,null);
+        //DisableObject();
     }
 
     public void ModifyHealth(float value)
@@ -114,7 +152,7 @@ public class MagicProjectileDirector : MonoBehaviour, IMagicObjectDirector
         health = Mathf.Clamp(health + value, 0, maxHealth);
         if (health <= 0)
         {
-            OnObjectDestroy?.Invoke();
+            OnObjectDestroy?.Invoke(GetPlaceholder(true));
             DisableObject();
         }
     }
@@ -147,5 +185,15 @@ public class MagicProjectileDirector : MonoBehaviour, IMagicObjectDirector
     public float GetRadiousFromCenter()
     {
         return motor.GetCollider().radius;
+    }
+
+    public void SetBounce(int _no)
+    {
+        bouncesRemaining += _no;
+    }
+
+    public Quaternion GetRotation()
+    {
+        return transform.rotation;
     }
 }

@@ -1,24 +1,30 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.UI.CanvasScaler;
 
 [RequireComponent(typeof(PlayerMotor))]
 public class EnemyDirector : MonoBehaviour, IMagicObjectDirector
 {
-    public event IMagicObjectDirector.CollisionTrigger HitTrigger;
-    public event GenericTrigger OnObjectDestroy;
+    public event IMagicObjectDirector.CollisionTrigger OnHit;
+    public event IMagicObjectDirector.DestroyTrigger OnObjectDestroy;
     public event GenericTrigger OnObjectDisable;
+    public event IMagicObjectDirector.BounceTrigger OnBounce;
 
     private float health;
     [SerializeField]
     private float maxHealth = 100;
-
+    
     private PlayerMotor motor;
+
+    private int bouncesRemaining = 0;
 
     private void Awake()
     {
         motor = GetComponent<PlayerMotor>();
+        bouncesRemaining = 0;
     }
 
     // cache tranasform
@@ -59,9 +65,9 @@ public class EnemyDirector : MonoBehaviour, IMagicObjectDirector
         return this.gameObject.name;
     }
 
-    public IMagicObjectDirector GetPlaceholder()
+    public IMagicObjectDirector GetPlaceholder(bool _actualIsNull)
     {
-        return new MagicPlaceholderDirector(this, motor.GetCollider(), gameObject, this.name, transform.position, transform.rotation);
+        return new MagicPlaceholderDirector(_actualIsNull ? null : this, motor.GetCollider(), gameObject, this.name, transform.position, transform.rotation);
     }
 
     public Vector3 GetPosition()
@@ -88,7 +94,7 @@ public class EnemyDirector : MonoBehaviour, IMagicObjectDirector
         health = Mathf.Clamp(health + value, 0, maxHealth);
         if (health <= 0)
         {
-            OnObjectDestroy?.Invoke();
+            OnObjectDestroy?.Invoke(GetPlaceholder(true));
             DisableObject();
         }
     }
@@ -99,6 +105,15 @@ public class EnemyDirector : MonoBehaviour, IMagicObjectDirector
         transform.rotation = _rot;
         //motor.ResetVelocity();
         gameObject.SetActive(true);
+        bouncesRemaining = 0;
+        //foreach (Delegate d in OnHit.GetInvocationList())
+        //{
+        //    OnHit -= (IMagicObjectDirector.CollisionTrigger)d;
+        //}
+        //foreach (Delegate d in OnBounce.GetInvocationList())
+        //{
+        //    OnBounce -= (IMagicObjectDirector.BounceTrigger)d;
+        //}
     }
 
     public void SetRotation(Quaternion _rot)
@@ -173,5 +188,15 @@ public class EnemyDirector : MonoBehaviour, IMagicObjectDirector
     public float GetRadiousFromCenter()
     {
         return motor.GetCollider().radius; 
+    }
+
+    public void SetBounce(int _no)
+    {
+        bouncesRemaining += _no;
+    }
+
+    public Quaternion GetRotation()
+    {
+        return transform.rotation;
     }
 }

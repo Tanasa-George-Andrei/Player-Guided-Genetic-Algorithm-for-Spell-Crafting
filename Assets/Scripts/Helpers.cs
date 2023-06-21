@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public static class Helpers
@@ -45,6 +46,23 @@ public static class Helpers
     {
         RaycastHit hit;
         return Physics.Raycast(_center, (_col.bounds.center - _center).normalized, out hit, (_col.bounds.center - _center).magnitude, _mask);
+    }
+
+    public static string WriteMagicHistory(SpellHistoryNode _node)
+    {
+        StringBuilder sb = new StringBuilder();
+        SpellHistoryNode expNode = _node;
+        while (expNode != null)
+        {
+            sb.AppendLine(expNode.target.GetName());
+            if(expNode.target.GetActualDirector() != null)
+            {
+                sb.Append(" - ");
+                sb.AppendLine(expNode.target.GetActualDirector().GetName());
+            }
+            expNode = expNode.prev;
+        }
+        return sb.ToString();
     }
 
 }
