@@ -8,6 +8,8 @@ public class AExplode : ActiveSpellComponent
     public float radius;
     private LayerMask entityLayerMask = (1 << 9);
     public Coroutine graphicsWait;
+    public Vector3 position = Vector3.zero;
+    public Quaternion rotation = Quaternion.identity;
 
     public AExplode(float _radius)
     {
@@ -64,11 +66,13 @@ public class AExplode : ActiveSpellComponent
                     }
                 }
             }
+            position = history.target.GetPosition();
+            rotation = history.target.GetRotation();
             graphicsWait = MagicManager.Instance.StartCoroutine(GraphicsWait());
         }
         if (state == ActiveSpellStates.Running)
         {
-            Graphics.DrawMesh(castData.element.mesh, Matrix4x4.TRS(history.target.GetPosition(), history.target.GetRotation(), 2 * radius * Vector3.one), castData.element.material, 0);
+            Graphics.DrawMesh(castData.element.mesh, Matrix4x4.TRS(position, rotation, 2 * radius * Vector3.one), castData.element.material, 0);
         }
         
     }
@@ -91,6 +95,8 @@ public class AExplode : ActiveSpellComponent
         castData = _castData;
         state = ActiveSpellStates.Started;
         MagicManager.Instance.StopCoroutine(graphicsWait);
+        position = Vector3.zero;
+        rotation = Quaternion.identity;
         AExplode temp = (AExplode)_active;
         radius = temp.radius;
         appliedTo.Clear();
@@ -158,6 +164,11 @@ public class GExplode : GeneticSpellComponentInt
     public override OriginSpellComponent GenerateOrigin(ElementData _element)
     {
         return (new AExplode(GetDistance())).GenerateOriginComponent();
+    }
+
+    public override string GetComponentName()
+    {
+        return "Explode";
     }
 
     public override string GetDisplayString()

@@ -133,7 +133,12 @@ public class GPropel : GeneticSpellComponentInt
 
     public override OriginSpellComponent GenerateOrigin(ElementData _element)
     {
-        return (new APropel(GetDistance())).GenerateOriginComponent();
+        return (new APropel(GetSpeed())).GenerateOriginComponent();
+    }
+
+    public override string GetComponentName()
+    {
+        return "Propel";
     }
 
     public override string GetDisplayString()

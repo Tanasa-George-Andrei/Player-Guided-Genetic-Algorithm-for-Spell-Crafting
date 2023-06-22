@@ -103,6 +103,11 @@ public class GSpecialTrigger : GeneticSpellComponent
         return (new ASpecialTrigger()).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Special Key Trigger";
+    }
+
     public override string GetDisplayString()
     {
         return "On Special Key";

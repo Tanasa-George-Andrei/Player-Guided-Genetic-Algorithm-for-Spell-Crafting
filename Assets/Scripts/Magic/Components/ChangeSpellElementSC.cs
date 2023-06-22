@@ -88,6 +88,11 @@ public class GChangeSpellElement : GeneticSpellComponent
         return (new AChangeSpellElement()).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Change Spell Element";
+    }
+
     public override string GetDisplayString()
     {
         return "Change Spell Element";

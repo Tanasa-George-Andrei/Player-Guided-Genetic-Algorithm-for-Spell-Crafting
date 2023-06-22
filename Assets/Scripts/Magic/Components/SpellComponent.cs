@@ -183,6 +183,8 @@ public abstract class GeneticSpellComponent
 
     public abstract String GetDisplayString();
 
+    public abstract String GetComponentName();
+
     protected static double DropoffFunc(in float genCMFraction)
     {
         return MathF.Pow(4, -genCMFraction);

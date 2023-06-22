@@ -122,6 +122,11 @@ public class GFork : GeneticSpellComponentInt
         return (new AFork(value)).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Fork";
+    }
+
     public override string GetDisplayString()
     {
         return "Fork " + value + " times";

@@ -164,6 +164,11 @@ public class GCreateMProjectile : GeneticSpellComponent
         return (new ACreateMProjectile()).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Create Projectile";
+    }
+
     public override string GetDisplayString()
     {
         return "Create Projectile";

@@ -132,6 +132,10 @@ public class GTeleportDir : GeneticSpellComponentInt
         return (new ATeleportDir(GetDistance())).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Teleport";
+    }
     public override string GetDisplayString()
     {
         return "Teleport for " + GetDistance() + "m";

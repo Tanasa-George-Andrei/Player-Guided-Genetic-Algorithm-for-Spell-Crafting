@@ -110,6 +110,11 @@ public class GDestroyTrigger : GeneticSpellComponent
         return (new ADestroyTrigger()).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Destroy Trigger";
+    }
+
     public override string GetDisplayString()
     {
         return "On Destroy";

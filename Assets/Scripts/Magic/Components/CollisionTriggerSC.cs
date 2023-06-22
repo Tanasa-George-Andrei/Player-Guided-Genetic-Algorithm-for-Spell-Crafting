@@ -138,6 +138,11 @@ public class GCollisionTrigger : GeneticSpellComponent
         return (new ACollisionTrigger()).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Collision Trigger";
+    }
+
     public override string GetDisplayString()
     {
         return "On Collision";

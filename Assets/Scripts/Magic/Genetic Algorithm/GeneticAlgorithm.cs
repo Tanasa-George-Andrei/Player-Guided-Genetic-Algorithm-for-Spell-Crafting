@@ -40,6 +40,11 @@ public class GNoTrigger : GeneticSpellComponent
         return null;
     }
 
+    public override string GetComponentName()
+    {
+        return "No Trigger";
+    }
+
     public override string GetDisplayString()
     {
         return "Continue";
@@ -574,4 +579,11 @@ public class GeneticAlgorithm
     {
         return GetDisplayCandiadates(maxPopSize, true);
     }
+
+    public List<SpellCandidate> ForceFinish()
+    {
+        isDone = true;
+        return GetDisplayCandiadates(maxPopSize, false);
+    }
+
 }

@@ -89,6 +89,11 @@ public class GApplyElementEffect : GeneticSpellComponent
         return (new AApplyElementEffect()).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Apply Element Effect";
+    }
+
     public override string GetDisplayString()
     {
         return "Apply Element Effect";

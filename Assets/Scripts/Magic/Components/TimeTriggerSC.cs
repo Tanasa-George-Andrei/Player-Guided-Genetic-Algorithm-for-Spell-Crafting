@@ -124,6 +124,11 @@ public class GTimeTrigger : GeneticSpellComponentInt
         return (new ATimeTrigger(GetWaitTime())).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Wait";
+    }
+
     public override string GetDisplayString()
     {
         return "Wait for " + GetWaitTime() + "s";

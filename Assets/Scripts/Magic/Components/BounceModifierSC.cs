@@ -127,6 +127,11 @@ public class GBounceModifier : GeneticSpellComponentInt
         return (new ABounceModifier(value)).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Bounce";
+    }
+
     public override string GetDisplayString()
     {
         return "Bounce for " + value + " times";

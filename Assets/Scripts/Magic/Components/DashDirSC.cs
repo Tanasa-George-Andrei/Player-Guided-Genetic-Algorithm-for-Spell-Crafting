@@ -133,6 +133,11 @@ public class GDashDir : GeneticSpellComponentInt
         return (new ADashDir(GetDistance())).GenerateOriginComponent();
     }
 
+    public override string GetComponentName()
+    {
+        return "Dash";
+    }
+
     public override string GetDisplayString()
     {
         return "Dash for " + GetDistance() + "m";
